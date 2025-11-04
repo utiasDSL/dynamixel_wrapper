@@ -1,0 +1,56 @@
+[workspace]
+authors = ["Daniel San José Pro <42489409+danielsanjosepro@users.noreply.github.com>"]
+channels = ["conda-forge"]
+name = "aloha4franka"
+platforms = ["linux-64"]
+version = "0.1.0"
+
+[tasks]
+
+[pypi-dependencies]
+dynamixel-helper = {path = "."}
+dynamixel-sdk = ">=3.8.4, <4"
+
+[dependencies]
+python = ">=3.11.0,<3.12"
+compilers = "*"
+cmake = "*"
+pkg-config = "*"
+make = "*"
+ninja = "*"
+
+[target.linux.dependencies]
+libgl-devel = "*"
+
+[environments]
+dynamixel-sdk = { features = ["dynamixel-sdk"] }
+humble = { features = ["humble", "dynamixel-sdk"] }
+jazzy = { features = ["jazzy", "dynamixel-sdk"] }
+
+
+[feature.dynamixel-sdk.pypi-dependencies]
+dynamixel-sdk = ">=3.8.4, <4"
+
+# humble
+[feature.humble]
+channels = ["https://prefix.dev/robostack-humble"]
+
+[feature.humble.dependencies]
+ros-humble-desktop = "*"
+colcon-common-extensions = "*"
+ros-humble-ros2-control = "*"
+ros-humble-ros2-controllers = "*"
+ros-humble-rmw-zenoh-cpp = "*"
+ros-humble-rmw-cyclonedds-cpp = "*"
+rosdep = "*"
+
+# jazzy
+[feature.jazzy]
+channels = ["https://prefix.dev/robostack-jazzy"]
+
+[feature.jazzy.dependencies]
+ros-jazzy-desktop = "*"
+ros-jazzy-ros2-control = "*"
+ros-jazzy-ros2-controllers = "*"
+colcon-common-extensions = "*"
+rosdep = "*"
