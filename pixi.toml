@@ -23,13 +23,8 @@ ninja = "*"
 libgl-devel = "*"
 
 [environments]
-dynamixel-sdk = { features = ["dynamixel-sdk"] }
-humble = { features = ["humble", "dynamixel-sdk"] }
-jazzy = { features = ["jazzy", "dynamixel-sdk"] }
-
-
-[feature.dynamixel-sdk.pypi-dependencies]
-dynamixel-sdk = ">=3.8.4, <4"
+humble = { features = ["humble"] }
+jazzy = { features = ["jazzy"]}
 
 # humble
 [feature.humble]
