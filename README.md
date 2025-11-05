@@ -4,6 +4,7 @@
 A Python wrapper for the Dynamixel SDK that simplifies control of Dynamixel servo motors.
 Just as simple as it can get.
 Includes a ROS2 compatible node.
+Check https://github.com/TUM-LSY/aloha4franka for a gripper that uses it.
 
 ## ⭐ Getting Started
 
