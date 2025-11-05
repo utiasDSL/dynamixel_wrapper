@@ -1,23 +1,24 @@
 [workspace]
 authors = ["Daniel San José Pro <42489409+danielsanjosepro@users.noreply.github.com>"]
 channels = ["conda-forge"]
-name = "aloha4franka"
+name = "dynamixel-wrapper"
 platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
+dynamixel-motor-ros2 = "python -m scripts.dynamixel_motor_ros2"
 
 [pypi-dependencies]
-dynamixel-helper = {path = "."}
-dynamixel-sdk = ">=3.8.4, <4"
+dynamixel-wrapper = {path = "."}
+
 
 [dependencies]
-python = ">=3.11.0,<3.12"
 compilers = "*"
 cmake = "*"
 pkg-config = "*"
 make = "*"
 ninja = "*"
+python = "==3.11"
 
 [target.linux.dependencies]
 libgl-devel = "*"
@@ -29,6 +30,9 @@ jazzy = { features = ["jazzy"]}
 # humble
 [feature.humble]
 channels = ["https://prefix.dev/robostack-humble"]
+
+[feature.humble.activation]
+scripts = ["scripts/set_env.sh"]
 
 [feature.humble.dependencies]
 ros-humble-desktop = "*"

@@ -1,0 +1,10 @@
+[project]
+name = "dynamixel-wrapper"
+version = "1.0.0"
+description = "A Python wrapper for Dynamixel SDK to simplify robot control."
+readme = "README.md"
+license-files = ["LICENSE.md"]
+requires-python = ">=3.11"
+dependencies = [
+    "dynamixel-sdk>=3.8.4, <4"
+]
