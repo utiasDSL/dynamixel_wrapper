@@ -36,3 +36,14 @@ This should output:
 ...
 
 ```
+
+## 🎯 Motor Calibration
+
+The calibration script automatically finds your motor's physical limits (stoppers, gripper ends, etc.) by moving it incrementally in both directions.
+
+**Quick Start:**
+```bash
+pixi run calibrate-motor --device /dev/ttyUSB0 --motor-id 0
+```
+
+What it does 📊 Saves min/max values to `outputs/motor_X_calibration.yaml`

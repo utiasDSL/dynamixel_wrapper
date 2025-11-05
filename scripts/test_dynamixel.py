@@ -4,7 +4,7 @@ import time
 motor = DynamixelMotor(
     model_name="XC430-W150T",
     id=0,
-    device_name="/dev/gripper_left",
+    device_name="/dev/gripper_right",
 )
 
 motor.connect()

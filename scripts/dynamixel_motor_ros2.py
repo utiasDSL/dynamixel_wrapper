@@ -5,7 +5,7 @@ import argparse
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import JointState
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float64MultiArray
 from std_srvs.srv import SetBool
 
 from dynamixel_wrapper import DynamixelMotor
@@ -53,7 +53,7 @@ class DynamixelMotorROS2Node(Node):
         )
 
         self.position_cmd_subscriber = self.create_subscription(
-            Float32MultiArray,
+            Float64MultiArray,
             f"{motor_name}/command",
             self.position_command_callback,
             10,
@@ -87,7 +87,7 @@ class DynamixelMotorROS2Node(Node):
         except RuntimeError as e:
             self.get_logger().error(f"Error reading motor state: {e}")
 
-    def position_command_callback(self, msg: Float32MultiArray):
+    def position_command_callback(self, msg: Float64MultiArray):
         """Handle position command messages."""
         if len(msg.data) < 1:
             self.get_logger().warn("Received empty position command")
@@ -96,7 +96,6 @@ class DynamixelMotorROS2Node(Node):
         try:
             target_position = int(msg.data[0])
             self.motor.set_position(target_position)
-            self.get_logger().debug(f"Set target position to {target_position}")
         except RuntimeError as e:
             self.get_logger().error(f"Error setting position: {e}")
 
@@ -190,6 +189,7 @@ def main():
         namespace=args.namespace,
         motor_name=args.motor_name,
     )
+    node.motor.set_torque_enable(True)
 
     try:
         rclpy.spin(node)

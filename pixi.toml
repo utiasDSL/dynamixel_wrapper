@@ -7,9 +7,11 @@ version = "0.1.0"
 
 [tasks]
 dynamixel-motor-ros2 = "python -m scripts.dynamixel_motor_ros2"
+calibrate-motor = "python -m scripts.calibrate_motor"
 
 [pypi-dependencies]
-dynamixel-wrapper = {path = "."}
+dynamixel-wrapper = {path = ".", editable = true}
+ruff = ">=0.14.3, <0.15"
 
 
 [dependencies]
