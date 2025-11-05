@@ -3,3 +3,4 @@
 .pixi
 *.egg-info
 build/lib/dynamixel_helper
+build/lib/dynamixel_wrapper
