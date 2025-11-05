@@ -4,40 +4,29 @@ A Python wrapper for the Dynamixel SDK that simplifies control of Dynamixel serv
 
 ## Getting Started
 
-### Prerequisites
-
-This project uses [pixi](https://pixi.sh/) for package management. Install pixi:
-
-```bash
-curl -fsSL https://pixi.sh/install.sh | bash
-```
-
 ### Installation
 
-1. Clone the repository:
+#### Python
+
+Use pip or uv:
 ```bash
-git clone <repository-url>
-cd dynamixel_wrapper
+pip install -e .
+```
+Alternatively use pixi:
+```bash
+pixi shell  # To create environment and enter in it
 ```
 
-2. Install dependencies using pixi:
+#### ROS2
+
+To broadcast the motor values and control a motor using ROS2, you can use the respective ROS2 environments:
+
 ```bash
-pixi install
+pixi run -e humble dynamixel-motor-ros2 --device /dev/ttyUSB1 --id 0
 ```
 
-3. Activate the environment:
+In a different shell, check the topics
 ```bash
-pixi shell
+pixi run -e humble ros2 topic list
 ```
 
-### Environments
-
-The project supports multiple environments:
-- `dynamixel-sdk` - Basic Dynamixel SDK environment
-- `humble` - ROS 2 Humble environment
-- `jazzy` - ROS 2 Jazzy environment
-
-Activate a specific environment:
-```bash
-pixi shell -e humble
-```
