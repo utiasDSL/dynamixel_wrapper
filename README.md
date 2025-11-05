@@ -1,4 +1,5 @@
 # Dynamixel-SDK Wrapper
+<img src="media/logo.png" alt="Logo"/>
 
 A Python wrapper for the Dynamixel SDK that simplifies control of Dynamixel servo motors.
 
