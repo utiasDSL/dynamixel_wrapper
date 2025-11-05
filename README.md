@@ -1,7 +1,9 @@
 # Dynamixel-SDK Wrapper
-<img src="media/logo.png" alt="Logo"/>
+<img src="media/logo.png" alt="Logo" width="80" align="right">
 
 A Python wrapper for the Dynamixel SDK that simplifies control of Dynamixel servo motors.
+Just as simple as it can get.
+Includes a ROS2 compatible node.
 
 ## ⭐ Getting Started
 
