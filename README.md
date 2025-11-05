@@ -2,7 +2,7 @@
 
 A Python wrapper for the Dynamixel SDK that simplifies control of Dynamixel servo motors.
 
-## Getting Started
+## ⭐ Getting Started
 
 ### Python
 
