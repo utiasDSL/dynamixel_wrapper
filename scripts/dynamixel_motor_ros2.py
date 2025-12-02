@@ -69,6 +69,8 @@ class DynamixelMotorROS2Node(Node):
         self.timer = self.create_timer(timer_period, self.publish_joint_state)
 
         self.get_logger().info("Dynamixel motor ROS2 node initialized")
+        self.last_switch_time = None
+        self.pwm_switch_delay = 1.0  # seconds 
 
     def publish_joint_state(self):
         """Publish current motor position and velocity as JointState."""
@@ -93,9 +95,54 @@ class DynamixelMotorROS2Node(Node):
             self.get_logger().warn("Received empty position command")
             return
 
-        try:
+        # try:
+        #     target_position = int(msg.data[0])
+        #     self.motor.set_position(target_position)
+        # except RuntimeError as e:
+        #     self.get_logger().error(f"Error setting position: {e}")
+
+
+
+        load = self.motor.get_present_load()  # raw 16-bit value
+        self.get_logger().info(f"Present Load: {load}")
+        # self.get_logger().info(f"Target Position: {target_position}")
+
+
+
+
+        # change to pwm control if grasping to avoid overload
+
+        try:  
             target_position = int(msg.data[0])
-            self.motor.set_position(target_position)
+            operating_mode = self.motor.get_operating_mode()
+
+
+            
+            if operating_mode == 16:  # PWM mode
+                if int(msg.data[0]) > self.motor.get_position()+20:
+                    self.get_logger().info(f"current mode 16, switching to 3") 
+                    operating_mode = self.motor.switch_operating_mode(operating_mode)
+                    self.get_logger().info(f"Operating Mode switched successfully: {operating_mode}") 
+                    self.motor.set_position(target_position)
+                else:
+                    self.get_logger().info(f"pwm mode") 
+                    self.motor.set_goal_pwm(-350) # set to 100%
+                    self.get_logger().info(f"{self.motor.get_goal_pwm()}")
+            elif operating_mode == 3:  # Position control mode
+                now = self.get_clock().now().nanoseconds * 1e-9
+                if target_position < self.motor.get_position()-100:
+                    if self.last_switch_time is None:
+                        self.last_switch_time = now
+                    self.motor.set_position(target_position)
+                    if now - self.last_switch_time >= self.pwm_switch_delay:
+                        # Delay passed → switch to PWM
+                        operating_mode = self.motor.switch_operating_mode(operating_mode)
+                        self.get_logger().info(f"Switch to PWM mode after {self.pwm_switch_delay}s")
+                        self.last_switch_time = None
+                        self.motor.set_goal_pwm(-350)  # Apply full PWM
+                else:
+                    self.last_switch_time = None
+                    self.motor.set_position(target_position)
         except RuntimeError as e:
             self.get_logger().error(f"Error setting position: {e}")
 
@@ -189,13 +236,28 @@ def main():
         namespace=args.namespace,
         motor_name=args.motor_name,
     )
+    node.motor.set_torque_enable(False)
+    # node.motor.set_position_gains(1600,0,0)
+    node.motor.set_pwm_limit(880)
+    print(node.motor.get_pwm_limit())
+    # print(node.motor.get_position_gains())
     node.motor.set_torque_enable(True)
-
     try:
         rclpy.spin(node)
     except KeyboardInterrupt:
         pass
     finally:
+        # print hardware error status
+        try:
+            hardware_error, dxl_comm_result, dxl_error = node.motor.packet_handler.read1ByteTxRx(
+                node.motor.port_handler,
+                node.motor.id,
+                node.motor.table_class.ADDR_HARDWARE_ERROR_STATUS,
+            )
+            print(f"Abaaba: {hardware_error:08b}")
+        except Exception as e:
+            print(f"Babababa: {e}")
+
         node.shutdown()
         node.destroy_node()
         rclpy.shutdown()

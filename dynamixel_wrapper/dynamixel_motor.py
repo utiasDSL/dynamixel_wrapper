@@ -2,7 +2,7 @@
 
 from dynamixel_sdk import COMM_SUCCESS, PortHandler, PacketHandler
 from dynamixel_wrapper.dynamixel_table import make_dynamixel_table
-
+import time
 
 class DynamixelMotor:
     def __init__(
@@ -139,6 +139,77 @@ class DynamixelMotor:
         self._raise_if_error(dxl_comm_result, dxl_error)
 
         return p_gain, i_gain
+    
+    def get_present_load(self):
+        """Get the present_load."""
+        present_load, dxl_comm_result, dxl_error = self.packet_handler.read2ByteTxRx(
+            self.port_handler,
+            self.id,
+            self.table_class.ADDR_PRESENT_LOAD,
+        )
+        self._raise_if_error(dxl_comm_result, dxl_error)
+
+        return present_load
+
+    def get_operating_mode(self):
+        """Get the Operating Mode."""
+        raw_mode, dxl_comm_result, dxl_error = self.packet_handler.read1ByteTxRx(
+            self.port_handler,
+            self.id,
+            self.table_class.ADDR_OPERATING_MODE,
+        )
+        self._raise_if_error(dxl_comm_result, dxl_error)
+        return int(raw_mode)
+
+    def switch_operating_mode(self, current_mode: int):
+        """Switch the Operating Mode between position control mode and pwm control mode."""
+        if current_mode == 3:  # Position Control Mode
+            goal_mode = 16  # PWM Control Mode
+        elif current_mode == 16:  # PWM Control Mode
+            goal_mode = 3  # Position Control Mode
+        self.set_torque_enable(False)  # Disable torque before switching mode
+        dxl_comm_result, dxl_error = self.packet_handler.write1ByteTxRx(
+            self.port_handler,
+            self.id,
+            self.table_class.ADDR_OPERATING_MODE,
+            goal_mode,
+        )
+        self._raise_if_error(dxl_comm_result, dxl_error)  
+        self.set_torque_enable(True)  # Disable torque before switching mode  
+        time.sleep(0.05)
+        return goal_mode
+
+    
+    def get_pwm_limit(self):
+        """Get the PWM limit."""
+        pwm_limit, dxl_comm_result, dxl_error = self.packet_handler.read2ByteTxRx(
+            self.port_handler,
+            self.id,
+            self.table_class.ADDR_PWM_LIMIT,
+        )
+        self._raise_if_error(dxl_comm_result, dxl_error)
+
+        return pwm_limit
+    
+    def set_pwm_limit(self, goal_pwm: int):
+        """Set the PWM limit."""
+        dxl_comm_result, dxl_error = self.packet_handler.write2ByteTxRx(
+            self.port_handler,
+            self.id,
+            self.table_class.ADDR_PWM_LIMIT,
+            goal_pwm,
+        )
+        self._raise_if_error(dxl_comm_result, dxl_error)
+
+    def set_goal_pwm(self, goal_pwm: int):
+        """Set the goal PWM."""
+        dxl_comm_result, dxl_error = self.packet_handler.write2ByteTxRx(
+            self.port_handler,
+            self.id,
+            self.table_class.ADDR_GOAL_PWM,
+            goal_pwm,
+        )
+        self._raise_if_error(dxl_comm_result, dxl_error)
 
     def set_position_gains(self, p_gain: int, i_gain: int, d_gain: int):
         """Set the position control gains."""

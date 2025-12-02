@@ -58,7 +58,14 @@ class DynamixelModelXC430W150T(DynamixelAdressTable):
     ADDR_POSITION_P_GAIN = 84
     ADDR_VELOCITY_P_GAIN = 78
     ADDR_VELOCITY_I_GAIN = 76
-
+    ADDR_PRESENT_LOAD = 126
+    # ADDR_VELOCITY_LIMIT = 44
+    ADDR_PWM_LIMIT = 36
+    ADDR_GOAL_PWM = 100
+    # ADDR_MIN_VOLTAGE_LIMIT = 32
+    # ADDR_MAX_VOLTAGE_LIMIT = 34
+    # ADDR_TEMPERATURE_LIMIT = 31
+    ADDR_HARDWARE_ERROR_STATUS = 70
 
 def make_dynamixel_table(model_name: str) -> DynamixelAdressTable:
     if model_name not in motor_model_registry:

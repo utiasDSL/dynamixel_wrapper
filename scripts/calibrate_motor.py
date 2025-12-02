@@ -209,7 +209,7 @@ def main():
     parser.add_argument(
         "--increment",
         type=int,
-        default=20,
+        default=50,
         help="Position increment per step (default: 20)",
     )
     parser.add_argument(

@@ -5,3 +5,4 @@
 build/lib/dynamixel_helper
 build/lib/dynamixel_wrapper
 outputs
+dynamixel_wrapper/__pycache__

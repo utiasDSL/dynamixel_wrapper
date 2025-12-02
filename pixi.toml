@@ -5,6 +5,10 @@ name = "dynamixel-wrapper"
 platforms = ["linux-64"]
 version = "0.1.0"
 
+
+[activation]
+scripts = ["scripts/set_env.sh"]
+
 [tasks]
 dynamixel-motor-ros2 = "python -m scripts.dynamixel_motor_ros2"
 calibrate-motor = "python -m scripts.calibrate_motor"
@@ -21,6 +25,7 @@ pkg-config = "*"
 make = "*"
 ninja = "*"
 python = "==3.11"
+pyyaml = ">=6.0.3,<7"
 
 [target.linux.dependencies]
 libgl-devel = "*"
@@ -39,8 +44,6 @@ scripts = ["scripts/set_env.sh"]
 [feature.humble.dependencies]
 ros-humble-desktop = "*"
 colcon-common-extensions = "*"
-ros-humble-ros2-control = "*"
-ros-humble-ros2-controllers = "*"
 ros-humble-rmw-zenoh-cpp = "*"
 ros-humble-rmw-cyclonedds-cpp = "*"
 rosdep = "*"
@@ -51,7 +54,7 @@ channels = ["https://prefix.dev/robostack-jazzy"]
 
 [feature.jazzy.dependencies]
 ros-jazzy-desktop = "*"
-ros-jazzy-ros2-control = "*"
-ros-jazzy-ros2-controllers = "*"
 colcon-common-extensions = "*"
+ros-jazzy-rmw-zenoh-cpp = "*"
+ros-jazzy-rmw-cyclonedds-cpp = "*"
 rosdep = "*"
