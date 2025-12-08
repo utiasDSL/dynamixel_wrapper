@@ -179,7 +179,16 @@ class DynamixelMotor:
         time.sleep(0.05)
         return goal_mode
 
-    
+    def get_goal_pwm(self):
+        """Get the goal pwm."""
+        goal_pwm, dxl_comm_result, dxl_error = self.packet_handler.read2ByteTxRx(
+            self.port_handler,
+            self.id,
+            self.table_class.ADDR_GOAL_PWM,
+        )
+        self._raise_if_error(dxl_comm_result, dxl_error)
+
+        return goal_pwm
     def get_pwm_limit(self):
         """Get the PWM limit."""
         pwm_limit, dxl_comm_result, dxl_error = self.packet_handler.read2ByteTxRx(
