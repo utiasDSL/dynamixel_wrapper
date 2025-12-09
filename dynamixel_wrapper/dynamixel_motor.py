@@ -33,6 +33,15 @@ class DynamixelMotor:
         if not self.port_handler.setBaudRate(self.baudrate):
             raise RuntimeError("Failed to set the baudrate!")
 
+    def reboot(self):
+        """Reboot the motor."""
+        dxl_comm_result, dxl_error = self.packet_handler.reboot(
+            self.port_handler,
+            self.id,
+        )
+        # NOTE: do not check for errors here as the motor will disconnect during reboot
+        # self._raise_if_error(dxl_comm_result, dxl_error)
+
     def set_position(self, position):
         """Set the target position of the motor."""
         dxl_comm_result, dxl_error = self.packet_handler.write4ByteTxRx(

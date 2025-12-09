@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """ROS2 node for controlling Dynamixel motors."""
 
+import time
 import argparse
 import rclpy
 from rclpy.node import Node
@@ -68,24 +69,42 @@ class DynamixelMotorROS2Node(Node):
         timer_period = 1.0 / publish_rate
         self.timer = self.create_timer(timer_period, self.publish_joint_state)
 
+        self._error_occurred = False
+
+        self._previous_position = None
+        self._previous_velocity = None
+        self.target_position = None
+
+        self.should_torque_be_enabled = False
+
         self.get_logger().info("Dynamixel motor ROS2 node initialized")
 
     def publish_joint_state(self):
         """Publish current motor position and velocity as JointState."""
+
         try:
-            position = self.motor.get_position()
-            velocity = self.motor.get_velocity()
+            self._previous_position = (
+                self.motor.get_position()
+                if not self._error_occurred
+                else self._previous_position
+            )
+            self._previous_velocity = (
+                self.motor.get_velocity()
+                if not self._error_occurred
+                else self._previous_velocity
+            )
 
             msg = JointState()
             msg.header.stamp = self.get_clock().now().to_msg()
             msg.name = [self.joint_name]
-            msg.position = [float(position)]
-            msg.velocity = [float(velocity)]
+            msg.position = [float(self._previous_position)]
+            msg.velocity = [float(self._previous_velocity)]
             msg.effort = [float(0.0)]  # Effort is not provided by the motor
 
             self.joint_state_publisher.publish(msg)
         except RuntimeError as e:
             self.get_logger().error(f"Error reading motor state: {e}")
+            self._try_recovery()
 
     def position_command_callback(self, msg: Float64MultiArray):
         """Handle position command messages."""
@@ -93,16 +112,22 @@ class DynamixelMotorROS2Node(Node):
             self.get_logger().warn("Received empty position command")
             return
 
+        self.target_position = int(msg.data[0])
+
+        if self._error_occurred:
+            return
+
         try:
-            target_position = int(msg.data[0])
-            self.motor.set_position(target_position)
+            self.motor.set_position(self.target_position)
         except RuntimeError as e:
             self.get_logger().error(f"Error setting position: {e}")
+            self._try_recovery()
 
     def set_torque_callback(self, request: SetBool.Request, response: SetBool.Response):
         """Handle torque enable/disable service requests."""
         try:
-            self.motor.set_torque_enable(request.data)
+            self._should_torque_be_enabled = request.data
+            self.motor.set_torque_enable(self._should_torque_be_enabled)
             response.success = True
             response.message = f"Torque {'enabled' if request.data else 'disabled'}"
             self.get_logger().info(response.message)
@@ -112,6 +137,20 @@ class DynamixelMotorROS2Node(Node):
             self.get_logger().error(response.message)
 
         return response
+
+    def _try_recovery(self):
+        """Attempt to recover from a motor communication error."""
+        self._error_occurred = True
+
+        self.get_logger().warn("Attempting to recover motor connection...")
+        self.motor.reboot()
+        time.sleep(0.15)
+        self.get_logger().info("Motor connection recovered")
+
+        self.motor.set_torque_enable(self.should_torque_be_enabled)
+
+        time.sleep(0.01)
+        self._error_occurred = False
 
     def shutdown(self):
         """Cleanup on node shutdown."""
@@ -190,6 +229,7 @@ def main():
         motor_name=args.motor_name,
     )
     node.motor.set_torque_enable(True)
+    node.should_torque_be_enabled = True
 
     try:
         rclpy.spin(node)
