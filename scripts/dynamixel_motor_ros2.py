@@ -26,11 +26,12 @@ class DynamixelMotorROS2Node(Node):
         joint_name: str,
         publish_rate: float,
         namespace: str = "",
+        node_name: str = "dynamixel_motor_node",
         motor_name: str = "dynamixel_motor",
         motor_query_rate: float = 20.0,
     ):
         """Initialize the Dynamixel motor ROS2 node."""
-        super().__init__("dynamixel_motor_node", namespace=namespace)
+        super().__init__(node_name, namespace=namespace)
 
         self.joint_name = joint_name
 
@@ -127,8 +128,8 @@ class DynamixelMotorROS2Node(Node):
     def set_torque_callback(self, request: SetBool.Request, response: SetBool.Response):
         """Handle torque enable/disable service requests."""
         try:
-            self._should_torque_be_enabled = request.data
-            self.motor.set_torque_enable(self._should_torque_be_enabled)
+            self.should_torque_be_enabled = request.data
+            self.motor.set_torque_enable(self.should_torque_be_enabled)
             response.success = True
             response.message = f"Torque {'enabled' if request.data else 'disabled'}"
             self.get_logger().info(response.message)
@@ -206,6 +207,8 @@ def main():
     )
     parser.add_argument(
         "--device-name",
+        "--device",
+        dest="device_name",
         type=str,
         default="/dev/gripper_left",
         help="Serial device name (default: /dev/gripper_left)",
@@ -235,6 +238,12 @@ def main():
         help="ROS2 namespace for topics and services (default: '')",
     )
     parser.add_argument(
+        "--node-name",
+        type=str,
+        default="dynamixel_motor_node",
+        help="ROS2 node name (default: dynamixel_motor_node)",
+    )
+    parser.add_argument(
         "--motor-name",
         type=str,
         default="dynamixel_motor",
@@ -253,6 +262,7 @@ def main():
         joint_name=args.joint_name,
         publish_rate=args.publish_rate,
         namespace=args.namespace,
+        node_name=args.node_name,
         motor_name=args.motor_name,
     )
     node.get_logger().info("Rebooting motor to ensure clean state...")
