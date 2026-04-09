@@ -28,6 +28,9 @@ class DynamixelMotorROS2Node(Node):
         namespace: str = "",
         node_name: str = "dynamixel_motor_node",
         motor_name: str = "dynamixel_motor",
+        joint_states_alias_topic: str = "",
+        command_alias_topic: str = "",
+        set_torque_alias_service: str = "",
         motor_query_rate: float = 20.0,
     ):
         """Initialize the Dynamixel motor ROS2 node."""
@@ -56,6 +59,18 @@ class DynamixelMotorROS2Node(Node):
             f"{motor_name}/joint_states",
             10,
         )
+        self.joint_state_publisher_compat = self.create_publisher(
+            JointState,
+            "joint_states",
+            10,
+        )
+        self.joint_state_publisher_alias = None
+        if joint_states_alias_topic:
+            self.joint_state_publisher_alias = self.create_publisher(
+                JointState,
+                joint_states_alias_topic,
+                10,
+            )
 
         self.position_cmd_subscriber = self.create_subscription(
             Float64MultiArray,
@@ -64,6 +79,15 @@ class DynamixelMotorROS2Node(Node):
             10,
             callback_group=ReentrantCallbackGroup(),
         )
+        self.position_cmd_subscriber_alias = None
+        if command_alias_topic:
+            self.position_cmd_subscriber_alias = self.create_subscription(
+                Float64MultiArray,
+                command_alias_topic,
+                self.position_command_callback,
+                10,
+                callback_group=ReentrantCallbackGroup(),
+            )
 
         timer_period = 1.0 / publish_rate
         # Timer to handle publishing
@@ -92,6 +116,14 @@ class DynamixelMotorROS2Node(Node):
             self.set_torque_callback,
             callback_group=motor_handling_callback_group,
         )
+        self.torque_service_alias = None
+        if set_torque_alias_service:
+            self.torque_service_alias = self.create_service(
+                SetBool,
+                set_torque_alias_service,
+                self.set_torque_callback,
+                callback_group=motor_handling_callback_group,
+            )
 
         self._error_occurred = False
 
@@ -116,6 +148,10 @@ class DynamixelMotorROS2Node(Node):
         msg.effort = [float(0.0)]  # Effort is not provided by the motor
 
         self.joint_state_publisher.publish(msg)
+        # Compatibility publisher for stacks expecting <namespace>/joint_states.
+        self.joint_state_publisher_compat.publish(msg)
+        if self.joint_state_publisher_alias is not None:
+            self.joint_state_publisher_alias.publish(msg)
 
     def position_command_callback(self, msg: Float64MultiArray):
         """Handle position command messages."""
@@ -249,6 +285,24 @@ def main():
         default="dynamixel_motor",
         help="Name of the motor node (default: dynamixel_motor)",
     )
+    parser.add_argument(
+        "--joint-states-alias-topic",
+        type=str,
+        default="",
+        help="Optional extra JointState topic to publish, e.g. /left/franka_gripper/joint_states",
+    )
+    parser.add_argument(
+        "--command-alias-topic",
+        type=str,
+        default="",
+        help="Optional extra command topic to subscribe, e.g. /left/franka_gripper/command",
+    )
+    parser.add_argument(
+        "--set-torque-alias-service",
+        type=str,
+        default="",
+        help="Optional extra SetBool service name, e.g. /left/franka_gripper/set_torque",
+    )
 
     args = parser.parse_args()
 
@@ -264,6 +318,9 @@ def main():
         namespace=args.namespace,
         node_name=args.node_name,
         motor_name=args.motor_name,
+        joint_states_alias_topic=args.joint_states_alias_topic,
+        command_alias_topic=args.command_alias_topic,
+        set_torque_alias_service=args.set_torque_alias_service,
     )
     node.get_logger().info("Rebooting motor to ensure clean state...")
     node.motor.reboot()

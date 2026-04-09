@@ -58,4 +58,28 @@ if [[ "$needs_fix" == "true" ]]; then
   echo "WARNING: Auto-repair applied successfully for $TARGET_LIB"
 fi
 
+# Validate the selected serial device before launching the ROS2 node.
+device_arg=""
+args=("$@")
+for ((i=0; i<${#args[@]}; i++)); do
+  case "${args[i]}" in
+    --device|--device-name)
+      if ((i + 1 < ${#args[@]})); then
+        device_arg="${args[i+1]}"
+      fi
+      ;;
+    --device=*|--device-name=*)
+      device_arg="${args[i]#*=}"
+      ;;
+  esac
+done
+
+if [[ -n "$device_arg" && ! -e "$device_arg" ]]; then
+  echo "ERROR: Requested serial device does not exist: $device_arg" >&2
+  echo "Hint: use stable udev symlinks when available, for example /dev/gripper_left or /dev/gripper_right." >&2
+  echo "Detected candidates:" >&2
+  ls -l /dev/gripper_left /dev/gripper_right /dev/ttyUSB* 2>/dev/null >&2 || true
+  exit 2
+fi
+
 exec python -m scripts.dynamixel_motor_ros2 "$@"
