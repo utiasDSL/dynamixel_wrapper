@@ -6,9 +6,7 @@ in both directions. It incrementally moves the motor until it reaches the end
 of travel (detected by position error threshold and zero velocity).
 """
 
-import os
 import time
-import yaml
 import argparse
 from dynamixel_wrapper import DynamixelMotor
 
@@ -249,18 +247,13 @@ def main():
 
         results = calibrator.calibrate()
 
-        # Save results to YAML file in outputs/ directory
-        # Create outputs/ directory if it doesn't exist
-
-        output_file = f"outputs/motor{args.device.replace('/', '_')}_{args.motor_id}_calibration.yaml"
-
-        if not os.path.exists("outputs"):
-            os.makedirs("outputs")
-
-        with open(output_file, "w") as f:
-            yaml.dump(results, f)
-
-        print(f"Calibration results saved to: {output_file}")
+        print("\n" + "!" * 70)
+        print("IMPORTANT: you need to set those limits in the")
+        print("  scripts/dynamixel_motor_ros2.py")
+        print("file AND in your crisp_py / crisp_gym config.")
+        print("Values to copy into POSITION_LIMITS:")
+        print(f'    "{args.device}": ({results["min_value"]}, {results["max_value"]}),')
+        print("!" * 70 + "\n")
 
     except Exception as e:
         print(f"Error during calibration: {e}")

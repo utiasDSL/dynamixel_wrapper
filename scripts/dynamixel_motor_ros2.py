@@ -14,6 +14,18 @@ from std_srvs.srv import SetBool
 from dynamixel_wrapper import DynamixelMotor
 
 
+# Hardcoded per-device calibration limits. Values come from
+# scripts/calibrate_motor.py (run it to recalibrate a gripper).
+#
+# DO NOT CHANGE LIMIT VALUES in this script without re-running calibration.
+# You might damage the gripper! Most likely the gripper limits set in your
+# crisp_py/crisp_gym config are incorrect.
+POSITION_LIMITS = {
+    "/dev/gripper_left":  (1150, 2050),
+    "/dev/gripper_right": (1023, 2069),
+}
+
+
 class DynamixelMotorROS2Node(Node):
     """ROS2 node for Dynamixel motor control."""
 
@@ -25,6 +37,8 @@ class DynamixelMotorROS2Node(Node):
         baudrate: int,
         joint_name: str,
         publish_rate: float,
+        min_position: int,
+        max_position: int,
         namespace: str = "",
         node_name: str = "dynamixel_motor_node",
         motor_name: str = "dynamixel_motor",
@@ -37,6 +51,8 @@ class DynamixelMotorROS2Node(Node):
         super().__init__(node_name, namespace=namespace)
 
         self.joint_name = joint_name
+        self.min_position = min_position
+        self.max_position = max_position
 
         self.motor = DynamixelMotor(
             model_name=model_name,
@@ -133,7 +149,10 @@ class DynamixelMotorROS2Node(Node):
 
         self.should_torque_be_enabled = False
 
-        self.get_logger().info("Dynamixel motor ROS2 node initialized")
+        self.get_logger().info(
+            f"Dynamixel motor ROS2 node initialized "
+            f"(position limits: [{self.min_position}, {self.max_position}])"
+        )
 
     def publish_joint_state(self):
         """Publish current motor position and velocity as JointState."""
@@ -159,7 +178,17 @@ class DynamixelMotorROS2Node(Node):
             self.get_logger().warn("Received empty position command")
             return
 
-        self.target_position = int(msg.data[0])
+        raw = int(msg.data[0])
+        clamped = max(self.min_position, min(self.max_position, raw))
+        if clamped != raw:
+            self.get_logger().warn(
+                f"Commanded position {raw} outside [{self.min_position}, "
+                f"{self.max_position}], clamped to {clamped}. "
+                "DO NOT CHANGE LIMIT VALUES in this script without re-running "
+                "calibration. You might damage the gripper! Most likely the "
+                "gripper limits set in your crisp_py/crisp_gym config are incorrect."
+            )
+        self.target_position = clamped
 
     def set_torque_callback(self, request: SetBool.Request, response: SetBool.Response):
         """Handle torque enable/disable service requests."""
@@ -306,6 +335,16 @@ def main():
 
     args = parser.parse_args()
 
+    if args.device_name not in POSITION_LIMITS:
+        raise SystemExit(
+            f"No hardcoded position limits for device={args.device_name}. "
+            "Refusing to start.\n\n"
+            "DO NOT CHANGE LIMIT VALUES in this script without re-running "
+            "calibration. You might damage the gripper! Most likely the gripper "
+            "limits set in your crisp_py/crisp_gym config are incorrect."
+        )
+    min_position, max_position = POSITION_LIMITS[args.device_name]
+
     rclpy.init()
 
     node = DynamixelMotorROS2Node(
@@ -321,6 +360,8 @@ def main():
         joint_states_alias_topic=args.joint_states_alias_topic,
         command_alias_topic=args.command_alias_topic,
         set_torque_alias_service=args.set_torque_alias_service,
+        min_position=min_position,
+        max_position=max_position,
     )
     node.get_logger().info("Rebooting motor to ensure clean state...")
     node.motor.reboot()
