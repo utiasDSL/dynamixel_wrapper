@@ -182,11 +182,10 @@ class DynamixelMotorROS2Node(Node):
         clamped = max(self.min_position, min(self.max_position, raw))
         if clamped != raw:
             self.get_logger().warn(
-                f"Commanded position {raw} outside [{self.min_position}, "
+                f"Commanded position {raw} outside position range for this gripper: [{self.min_position}, "
                 f"{self.max_position}], clamped to {clamped}. "
-                "DO NOT CHANGE LIMIT VALUES in this script without re-running "
-                "calibration. You might damage the gripper! Most likely the "
-                "gripper limits set in your crisp_py/crisp_gym config are incorrect."
+                "Most likely the gripper limits set in your crisp_py/crisp_gym config are incorrect. DO NOT CHANGE LIMIT VALUES in this script (dynamixel_motor_ros2.py) without re-running "
+                "calibration. You might damage the gripper!"
             )
         self.target_position = clamped
 
